@@ -15,16 +15,17 @@ public class Appointment {
     private Long id;
 
     private String patientName;
-    
+
     @ManyToOne
     @JoinColumn(name = "doctor_id", nullable = true)
     private Doctor doctor;
-    
-    private Boolean cancelled = false;
-    private Integer queue; 
-    private String status;
 
-    // getters & setters
+    private Boolean cancelled = false;
+    private Integer queue;
+    private String status;
+    private String appointmentDate; // ✅ NEW FIELD
+
+    // Getters & Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -42,4 +43,7 @@ public class Appointment {
 
     public boolean isCancelled() { return cancelled; }
     public void setCancelled(boolean cancelled) { this.cancelled = cancelled; }
+
+    public String getAppointmentDate() { return appointmentDate; }
+    public void setAppointmentDate(String appointmentDate) { this.appointmentDate = appointmentDate; }
 }

@@ -47,7 +47,7 @@ function Dashboard() {
     <div className="dashboard">
       <div className="dashboard-header">
         <div>
-          <h1>Dashboard</h1>
+          <h1>Doctors</h1>
           <p className="subtitle">
             Welcome back! Here's your hospital management overview
           </p>

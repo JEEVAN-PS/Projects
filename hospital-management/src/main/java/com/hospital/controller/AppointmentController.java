@@ -28,43 +28,35 @@ public class AppointmentController {
 
     @GetMapping
     public ResponseEntity<List<AppointmentResponse>> getAllAppointments() {
+        return ResponseEntity.ok(appointmentService.getAllAppointments());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getAppointmentById(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(appointmentService.getAllAppointments());
+            return ResponseEntity.ok(appointmentService.getAppointmentById(id));
         } catch (Exception e) {
-            System.err.println("❌ Error in getAllAppointments: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Appointment not found");
         }
     }
 
     @PostMapping
     public ResponseEntity<?> bookAppointment(@RequestBody Appointment appointment) {
         try {
-            System.out.println("📅 Starting bookAppointment...");
-            System.out.println("Patient: " + appointment.getPatientName());
-            System.out.println("Doctor: " + appointment.getDoctor());
-            
             Appointment booked = appointmentService.bookAppointment(appointment);
-            
-            System.out.println("✅ Appointment booked, creating response...");
-            
             AppointmentResponse response = new AppointmentResponse(
                 booked.getId(),
                 booked.getPatientName(),
                 booked.getDoctor().getName(),
                 booked.getQueue(),
-                booked.getStatus()
+                booked.getStatus(),
+                booked.getAppointmentDate() // ✅ include date
             );
-            
-            System.out.println("✅ Response created: " + response.getPatientName());
             return ResponseEntity.ok(response);
-            
         } catch (Exception e) {
-            System.err.println("❌❌❌ CRITICAL ERROR in bookAppointment:");
-            System.err.println("Message: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("❌ Error booking: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"" + e.getMessage() + "\"}");
+                    .body("Error: " + e.getMessage());
         }
     }
 
@@ -77,24 +69,13 @@ public class AppointmentController {
                 cancelled.getPatientName(),
                 cancelled.getDoctor().getName(),
                 cancelled.getQueue(),
-                cancelled.getStatus()
+                cancelled.getStatus(),
+                cancelled.getAppointmentDate() // ✅ include date
             );
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("❌ Error cancelling: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"" + e.getMessage() + "\"}");
-        }
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getAppointmentById(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(appointmentService.getAppointmentById(id));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"" + e.getMessage() + "\"}");
+                    .body("Error: " + e.getMessage());
         }
     }
 
@@ -104,7 +85,7 @@ public class AppointmentController {
             return ResponseEntity.ok(appointmentService.getAppointmentsByDoctor(doctorId));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"" + e.getMessage() + "\"}");
+                    .body("Error: " + e.getMessage());
         }
     }
 }

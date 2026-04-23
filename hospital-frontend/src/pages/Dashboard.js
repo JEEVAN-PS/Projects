@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { publicApi, privateApi } from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
+import { publicApi } from "../services/api";
 import "./Dashboard.css";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalDoctors: 0,
     totalAppointments: 0,
@@ -13,20 +14,19 @@ function Dashboard() {
   });
 
   const [appointments, setAppointments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [showDoctors, setShowDoctors] = useState(false);
 
   const loadData = async () => {
     try {
-      // 🔐 SECURED API (requires token)
       const doctorsRes = await publicApi.get("/doctors");
-
-      // 🌐 PUBLIC API
       const appointmentsRes = await publicApi.get("/appointments");
 
       const allAppointments = appointmentsRes.data;
+      const active = allAppointments.filter((a) => a.status === "BOOKED").length;
+      const cancelled = allAppointments.filter((a) => a.status === "CANCELLED").length;
 
-      const active = allAppointments.filter(a => a.status === "BOOKED").length;
-      const cancelled = allAppointments.filter(a => a.status === "CANCELLED").length;
-
+      setDoctors(doctorsRes.data);
       setAppointments(allAppointments);
 
       setStats({
@@ -36,120 +36,175 @@ function Dashboard() {
         cancelledAppointments: cancelled,
         loading: false
       });
-
     } catch (err) {
-      console.error("❌ Dashboard load error:", err);
-      setStats(prev => ({ ...prev, loading: false }));
+      console.error("Dashboard load error:", err);
+      setStats((prev) => ({ ...prev, loading: false }));
     }
   };
 
   useEffect(() => {
     loadData();
-
-    const interval = setInterval(loadData, 5000); // ⏱️ reduced spam (was 2s)
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  // Derived data
-  const activeAppointments = appointments.filter(a => a.status === "BOOKED");
-  const cancelledAppointments = appointments.filter(a => a.status === "CANCELLED");
+  const activeAppointments = appointments.filter((a) => a.status === "BOOKED");
+  const cancelledAppointments = appointments.filter((a) => a.status === "CANCELLED");
 
   return (
     <div className="dashboard-container">
+
+      {/* HEADER */}
       <div className="dashboard-header">
-        <h1>Welcome back! Here's your hospital management overview</h1>
+        <h1>Dashboard</h1>
+        <p>Welcome back! Here's your hospital management overview</p>
       </div>
 
       {/* STATS */}
       <div className="stats-grid">
-        <div className="stat-card stat-card-primary">
+        <div className="stat-card">
           <div className="stat-icon">👨‍⚕️</div>
-          <div className="stat-content">
+          <div>
             <h3>Total Doctors</h3>
-            <div className="stat-number">
-              {stats.loading ? "..." : stats.totalDoctors}
-            </div>
-            <p>Available specialists</p>
+            <h2>{stats.loading ? "..." : stats.totalDoctors}</h2>
           </div>
         </div>
 
-        <div className="stat-card stat-card-secondary">
+        <div className="stat-card">
           <div className="stat-icon">📅</div>
-          <div className="stat-content">
+          <div>
             <h3>Total Appointments</h3>
-            <div className="stat-number">
-              {stats.loading ? "..." : stats.totalAppointments}
-            </div>
-            <p>All bookings</p>
+            <h2>{stats.loading ? "..." : stats.totalAppointments}</h2>
           </div>
         </div>
 
-        <div className="stat-card stat-card-success">
+        <div className="stat-card">
           <div className="stat-icon">✅</div>
-          <div className="stat-content">
-            <h3>Active</h3>
-            <div className="stat-number">
-              {stats.loading ? "..." : stats.activeAppointments}
-            </div>
-            <p>Confirmed bookings</p>
+          <div>
+            <h3>Active Appointments</h3>
+            <h2>{stats.loading ? "..." : stats.activeAppointments}</h2>
           </div>
         </div>
 
-        <div className="stat-card stat-card-danger">
+        <div className="stat-card">
           <div className="stat-icon">❌</div>
-          <div className="stat-content">
+          <div>
             <h3>Cancelled</h3>
-            <div className="stat-number">
-              {stats.loading ? "..." : stats.cancelledAppointments}
-            </div>
-            <p>Cancelled bookings</p>
+            <h2>{stats.loading ? "..." : stats.cancelledAppointments}</h2>
           </div>
         </div>
       </div>
 
-      {/* QUICK ACTIONS */}
-      <div className="dashboard-cards">
-        <div className="card card-feature">
-          <div className="card-header">
-            <h2>Quick Actions</h2>
-          </div>
-          <div className="card-body">
-            <div className="actions-grid">
-              <Link to="/doctors" className="action-button">👨‍⚕️ View Doctors</Link>
-              <Link to="/appointments" className="action-button">📅 Book Appointment</Link>
-              <Link to="/change-password" className="action-button">🔐 Account Settings</Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ACTIVE */}
+      {/* ACTIVE APPOINTMENTS */}
       {activeAppointments.length > 0 && (
-        <div className="card card-feature">
+        <div className="card">
           <h2>Recent Active Appointments</h2>
-          {activeAppointments.map(apt => (
-            <div key={apt.id} className="appointment-item active">
+          {activeAppointments.map((apt) => (
+            <div key={apt.id} className="appointment-item">
               <h4>{apt.patientName}</h4>
               <p>Doctor: {apt.doctorName}</p>
               <p>Queue: #{apt.queue}</p>
+              <p>Date: {apt.appointmentDate || "Not Selected"}</p>
             </div>
           ))}
         </div>
       )}
 
-      {/* CANCELLED */}
+      {/* CANCELLED APPOINTMENTS */}
       {cancelledAppointments.length > 0 && (
-        <div className="card card-feature">
+        <div className="card">
           <h2>Cancelled Appointments</h2>
-          {cancelledAppointments.map(apt => (
+          {cancelledAppointments.map((apt) => (
             <div key={apt.id} className="appointment-item cancelled">
               <h4>{apt.patientName}</h4>
               <p>Doctor: {apt.doctorName}</p>
               <p>Queue: #{apt.queue}</p>
+              <p>Date: {apt.appointmentDate || "Not Selected"}</p>
             </div>
           ))}
         </div>
       )}
+
+      {/* DOCTORS LIST */}
+      {showDoctors && (
+        <div className="card">
+          <h2>👨‍⚕️ All Doctors ({doctors.length})</h2>
+          {doctors.length > 0 ? (
+            doctors.map((doc) => (
+              <div key={doc.id} className="appointment-item">
+                <h4>👨‍⚕️ Dr. {doc.name}</h4>
+                <p><strong>Specialization:</strong> {doc.specialization}</p>
+                <p><strong>Experience:</strong> {doc.experience} years</p>
+                <p><strong>Available Days:</strong> {doc.availableDay || "Not Available"}</p>
+                <p><strong>Timing:</strong> {doc.startTime} - {doc.endTime}</p>
+              </div>
+            ))
+          ) : (
+            <p>No doctors available</p>
+          )}
+
+          {/* Book Appointment button inside doctors section */}
+          <div style={{ marginTop: "16px", textAlign: "center" }}>
+            <button
+              onClick={() => navigate("/appointments")}
+              style={{
+                padding: "10px 24px",
+                backgroundColor: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontSize: "15px",
+                fontWeight: "600"
+              }}
+            >
+              📅 Book Appointment
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* BOTTOM BUTTONS */}
+      <div className="bottom-buttons" style={{
+        display: "flex",
+        gap: "16px",
+        marginTop: "24px",
+        justifyContent: "center"
+      }}>
+        <button
+          onClick={() => navigate("/appointments")}
+          style={{
+            padding: "12px 28px",
+            backgroundColor: "#2563eb",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "15px",
+            fontWeight: "600",
+            textDecoration: "none"
+          }}
+        >
+          📅 Book Appointment
+        </button>
+
+        <button
+          onClick={() => setShowDoctors(!showDoctors)}
+          style={{
+            padding: "12px 28px",
+            backgroundColor: showDoctors ? "#dc2626" : "#16a34a",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "15px",
+            fontWeight: "600"
+          }}
+        >
+          {showDoctors ? "❌ Hide Doctors" : "👨‍⚕️ View Doctors"}
+        </button>
+      </div>
+
     </div>
   );
 }

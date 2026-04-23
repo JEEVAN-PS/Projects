@@ -26,15 +26,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
     // Public endpoints that don't require JWT validation
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
-        "/admin/auth/register",
-        "/admin/auth/login",
-        "/user/auth/register",
-        "/user/auth/login",
-        "/auth/send-otp",
-        "/auth/verify-otp",
-        "/auth/reset-password",
-        "/doctors",
-        "/appointments"
+            "/admin/auth/register",
+            "/admin/auth/login",
+            "/user/auth/register",
+            "/user/auth/login",
+            "/auth/send-otp",
+            "/auth/verify-otp",
+            "/auth/reset-password",
+            "/doctors",
+            "/appointments"
     );
 
     @Override
@@ -53,7 +53,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // ✅ For protected endpoints, validate JWT
         String authHeader = request.getHeader("Authorization");
-        
+
         System.out.println("🔐 Protected endpoint - checking JWT: " + method + " " + path);
         System.out.println("AUTH HEADER: " + authHeader);
 
@@ -63,7 +63,7 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 String email = jwtUtil.extractEmail(token);
                 String role = jwtUtil.extractRole(token);
-                
+
                 System.out.println("EMAIL FROM TOKEN: " + email);
                 System.out.println("ROLE FROM TOKEN: " + role);
 
@@ -109,6 +109,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Check if path matches any public endpoint
         for (String publicPath : PUBLIC_ENDPOINTS) {
+
+            // Only allow GET requests for doctors and appointments as public
+            if ((publicPath.equals("/doctors") || publicPath.equals("/appointments"))
+                    && !"GET".equalsIgnoreCase(method)) {
+                continue;
+            }
+
             if (path.startsWith(publicPath)) {
                 return true;
             }
