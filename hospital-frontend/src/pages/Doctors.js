@@ -1,50 +1,156 @@
 import { useEffect, useState } from "react";
-import api from "../services/api";
+import { publicApi, privateApi } from "../services/api";
+import "./Dashboard.css";
 
-function Doctors() {
-  const [doctors, setDoctors] = useState([]);
-  const [role, setRole] = useState(localStorage.getItem("role"));
+function Dashboard() {
+  const [stats, setStats] = useState({
+    totalDoctors: 0,
+    totalAppointments: 0,
+    activeAppointments: 0
+  });
 
-  const loadDoctors = () => {
-    api.get("/doctors")
-      .then(res => setDoctors(res.data))
+  const [recentAppointments, setRecentAppointments] = useState([]);
+
+  const loadData = () => {
+    // ✅ Public endpoint (if doctors is public)
+    publicApi.get("/doctors")
+      .then(res => {
+        setStats(prev => ({ ...prev, totalDoctors: res.data.length }));
+      })
+      .catch(err => console.log(err));
+
+    // ✅ Use privateApi if appointments need auth
+    privateApi.get("/appointments")
+      .then(res => {
+        const appointments = res.data;
+        const active = appointments.filter(a => a.status === "BOOKED").length;
+        
+        setStats(prev => ({
+          ...prev,
+          totalAppointments: appointments.length,
+          activeAppointments: active
+        }));
+
+        setRecentAppointments(appointments.slice(0, 5));
+      })
       .catch(err => console.log(err));
   };
 
   useEffect(() => {
-    const currentRole = localStorage.getItem("role");
-    setRole(currentRole);
-    loadDoctors();
+    loadData();
+    
+    const interval = setInterval(loadData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <div>
-      <h2>👨‍⚕️ Doctors</h2>
+    <div className="dashboard">
+      <div className="dashboard-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p className="subtitle">
+            Welcome back! Here's your hospital management overview
+          </p>
+        </div>
+      </div>
 
-      <h3>All Doctors</h3>
-
-      {doctors.length === 0 ? (
-        <p>No doctors available</p>
-      ) : (
-        doctors.map((d) => (
-          <div style={{ backgroundColor: "#fff", padding: "15px", marginBottom: "10px", borderRadius: "8px", border: "1px solid #ddd" }} key={d.id}>
-            <h4>{d.name}</h4>
-            <p><strong>Specialization:</strong> {d.specialization}</p>
-            <p><strong>Experience:</strong> {d.experience} years</p>
-            <p><strong>Available:</strong> {d.availableDay} ({d.startTime} - {d.endTime})</p>
-
-            {role === "ADMIN" && (
-              <button
-                style={{ backgroundColor: "#ef4444", color: "white", padding: "8px 15px", border: "none", cursor: "pointer" }}
-              >
-                Delete Doctor
-              </button>
-            )}
+      <div className="stats-grid">
+        <div className="stat-card doctors-stat">
+          <div className="stat-icon">👨‍⚕️</div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.totalDoctors}</div>
+            <div className="stat-label">Total Doctors</div>
           </div>
-        ))
-      )}
+        </div>
+
+        <div className="stat-card appointments-stat">
+          <div className="stat-icon">📅</div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.totalAppointments}</div>
+            <div className="stat-label">Total Appointments</div>
+          </div>
+        </div>
+
+        <div className="stat-card active-stat">
+          <div className="stat-icon">✅</div>
+          <div className="stat-content">
+            <div className="stat-value">{stats.activeAppointments}</div>
+            <div className="stat-label">Active Appointments</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-content">
+        <div className="appointments-section">
+          <div className="section-header">
+            <h2>Recent Appointments</h2>
+            <span className="badge">{recentAppointments.length}</span>
+          </div>
+
+          {recentAppointments.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📭</div>
+              <p>No appointments yet</p>
+            </div>
+          ) : (
+            <div className="appointments-list">
+              {recentAppointments.map((apt, idx) => (
+                <div key={apt.id} className="appointment-card">
+                  <div className="appointment-header">
+                    <h3>{apt.patientName}</h3>
+                    <span className={`status ${apt.status.toLowerCase()}`}>
+                      {apt.status === "BOOKED" ? "✓ Active" : "✕ Cancelled"}
+                    </span>
+                  </div>
+
+                  <div className="appointment-details">
+                    <div className="detail-item">
+                      <span className="label">👨‍⚕️ Doctor</span>
+                      <span className="value">{apt.doctorName || "Unassigned"}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="label">🎫 Queue</span>
+                      <span className="value">#{apt.queue}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="info-section">
+          <div className="info-card">
+            <h3>Quick Stats</h3>
+            <div className="quick-stat">
+              <span className="stat-name">Avg Queue Length</span>
+              <span className="stat-number">
+                {stats.totalAppointments > 0 
+                  ? Math.ceil(stats.totalAppointments / Math.max(stats.totalDoctors, 1))
+                  : 0}
+              </span>
+            </div>
+            <div className="quick-stat">
+              <span className="stat-name">System Status</span>
+              <span className="stat-status online">● Online</span>
+            </div>
+          </div>
+
+          <div className="info-card">
+            <h3>Quick Actions</h3>
+            <div className="action-buttons">
+              <a href="/appointments" className="action-btn">
+                📅 Book Appointment
+              </a>
+              <a href="/doctors" className="action-btn">
+                👨‍⚕️ View Doctors
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-export default Doctors;
+export default Dashboard;

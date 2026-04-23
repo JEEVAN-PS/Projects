@@ -16,14 +16,13 @@ public class Appointment {
 
     private String patientName;
     
-    // ⭐ FIXED - Add nullable=true
     @ManyToOne
     @JoinColumn(name = "doctor_id", nullable = true)
     private Doctor doctor;
     
-    private boolean cancelled=false;
-    private int queue;
-    private String status; // BOOKED / CANCELLED
+    private Boolean cancelled = false;
+    private Integer queue; 
+    private String status;
 
     // getters & setters
     public Long getId() { return id; }
@@ -32,8 +31,8 @@ public class Appointment {
     public String getPatientName() { return patientName; }
     public void setPatientName(String patientName) { this.patientName = patientName; }
 
-    public int getQueue() { return queue; }
-    public void setQueue(int queue) { this.queue = queue; }
+    public Integer getQueue() { return queue; }
+    public void setQueue(Integer queue) { this.queue = queue; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

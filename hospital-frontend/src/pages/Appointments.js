@@ -1,30 +1,23 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import "./Appointments.css";
 
 function Appointments() {
   const [appointments, setAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
-  const [patientName, setPatientName] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState("");
-
-  const loadAppointments = () => {
-    api.get("/appointments")
-      .then(res => {
-        console.log("Appointments loaded:", res.data);
-        setAppointments(res.data);
-      })
-      .catch(err => console.log("Error loading appointments:", err));
-  };
-
-  const loadDoctors = () => {
-    api.get("/doctors")
-      .then(res => setDoctors(res.data))
-      .catch(err => console.log(err));
-  };
+  const [formData, setFormData] = useState({
+    patientName: "",
+    doctorId: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    loadAppointments();
     loadDoctors();
+    loadAppointments();
     
     const interval = setInterval(() => {
       loadAppointments();
@@ -33,117 +26,187 @@ function Appointments() {
     return () => clearInterval(interval);
   }, []);
 
-  const bookAppointment = async () => {
-    if (!patientName.trim()) {
-      alert("Enter patient name");
+  const loadDoctors = () => {
+    api.get("/doctors")
+      .then(res => {
+        console.log("✅ Doctors loaded:", res.data);
+        setDoctors(res.data);
+      })
+      .catch(err => {
+        console.error("❌ Error loading doctors:", err);
+      });
+  };
+
+  const loadAppointments = () => {
+    api.get("/appointments")
+      .then(res => {
+        console.log("✅ Appointments loaded:", res.data);
+        setAppointments(res.data);
+      })
+      .catch(err => {
+        console.error("❌ Error loading appointments:", err);
+      });
+  };
+
+  // ✅ Helper to safely extract error message from backend response
+  const getErrorMessage = (err, fallback) => {
+    return (
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      (typeof err.response?.data === "string" ? err.response.data : null) ||
+      fallback
+    );
+  };
+
+  const handleBookAppointment = async (e) => {
+    e.preventDefault();
+
+    if (!formData.patientName || !formData.doctorId) {
+      setError("Please fill all fields");
       return;
     }
 
-    if (!selectedDoctor) {
-      alert("Please select a doctor");
-      return;
-    }
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
-      console.log("Booking appointment for doctor ID:", selectedDoctor);
-      
-      await api.post("/appointments", {
-        patientName,
+      // ✅ Backend expects nested doctor object { id: ... }
+      const appointmentData = {
+        patientName: formData.patientName,
         doctor: {
-          id: parseInt(selectedDoctor)
+          id: parseInt(formData.doctorId)
         }
-      });
+      };
 
-      setPatientName("");
-      setSelectedDoctor("");
-      
-      setTimeout(() => {
-        loadAppointments();
-      }, 500);
-      
-      alert("Appointment booked successfully");
+      console.log("📤 Sending appointment data:", appointmentData);
+
+      const res = await api.post("/appointments", appointmentData);
+      console.log("✅ Appointment booked:", res.data);
+
+      setSuccess(`Appointment booked! Queue number: ${res.data?.queue ?? "N/A"}`);
+      setFormData({ patientName: "", doctorId: "" });
+
+      loadAppointments();
     } catch (err) {
-      console.error("Booking error:", err);
-      alert("Error booking appointment: " + err.response?.data);
+      console.error("❌ Error booking appointment:", err);
+      setError(getErrorMessage(err, "Error booking appointment"));
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCancel = async (id) => {
+  const handleCancelAppointment = async (appointmentId) => {
+    if (!window.confirm("Are you sure you want to cancel this appointment?")) {
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
     try {
-      await api.put(`/appointments/cancel/${id}`);
-      
-      setTimeout(() => {
-        loadAppointments();
-      }, 500);
-      
-      alert("Appointment cancelled");
+      console.log("🗑️ Cancelling appointment ID:", appointmentId);
+
+      await api.put(`/appointments/cancel/${appointmentId}`);
+
+      console.log("✅ Appointment cancelled successfully");
+      setSuccess("Appointment cancelled successfully!");
+
+      loadAppointments();
     } catch (err) {
-      console.error(err);
-      alert("Error cancelling appointment");
+      console.error("❌ Error cancelling appointment:", err);
+      setError(getErrorMessage(err, "Error cancelling appointment"));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2>📅 Appointments</h2>
-
-      <div style={{ backgroundColor: "#f0f0f0", padding: "20px", marginBottom: "20px", borderRadius: "8px" }}>
-        <h3>Book Appointment</h3>
-
-        <input
-          placeholder="Patient Name"
-          value={patientName}
-          onChange={(e) => setPatientName(e.target.value)}
-          style={{ width: "100%", padding: "8px", marginBottom: "10px", boxSizing: "border-box" }}
-        />
-
-        <select
-          value={selectedDoctor}
-          onChange={(e) => setSelectedDoctor(e.target.value)}
-          style={{ width: "100%", padding: "8px", marginBottom: "10px", boxSizing: "border-box" }}
-        >
-          <option value="">-- Select Doctor --</option>
-          {doctors.map((doctor) => (
-            <option key={doctor.id} value={doctor.id}>
-              {doctor.name} - {doctor.specialization}
-            </option>
-          ))}
-        </select>
-
-        <button 
-          onClick={bookAppointment}
-          style={{ width: "100%", padding: "10px", backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer" }}
-        >
-          Book Appointment
-        </button>
+    <div className="appointments-container">
+      <div className="appointments-header">
+        <h1>📅 Appointments</h1>
+        <p>Book and manage your medical appointments</p>
       </div>
 
-      <h3>All Appointments</h3>
+      {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">{success}</div>}
 
-      {appointments.length === 0 ? (
-        <p>No appointments</p>
-      ) : (
-        appointments.map((a) => (
-          <div style={{ backgroundColor: "#fff", padding: "15px", marginBottom: "10px", borderRadius: "8px", border: "1px solid #ddd" }} key={a.id}>
-            <h3>{a.patientName}</h3>
+      <div className="appointments-grid">
+        <div className="booking-section">
+          <h2>Book New Appointment</h2>
+          <form onSubmit={handleBookAppointment} className="booking-form">
+            <div className="form-group">
+              <label>Patient Name</label>
+              <input
+                type="text"
+                placeholder="Your full name"
+                value={formData.patientName}
+                onChange={(e) => setFormData({...formData, patientName: e.target.value})}
+                disabled={loading}
+              />
+            </div>
 
-            <p>Doctor: {a.doctorName || "Not Assigned"}</p>
+            <div className="form-group">
+              <label>Select Doctor</label>
+              <select
+                value={formData.doctorId}
+                onChange={(e) => setFormData({...formData, doctorId: e.target.value})}
+                disabled={loading}
+              >
+                <option value="">-- Select a Doctor --</option>
+                {doctors.map((doctor) => (
+                  <option key={doctor.id} value={doctor.id}>
+                    Dr. {doctor.name} - {doctor.specialization}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <p>Queue No: {a.queue}</p>
-
-            <p>
-              Status: {a.status === "CANCELLED" ? "❌ Cancelled" : "✅ Active"}
-            </p>
-
-            <button 
-              onClick={() => handleCancel(a.id)}
-              style={{ backgroundColor: a.status === "CANCELLED" ? "#10b981" : "#ef4444", color: "white", padding: "8px 15px", border: "none", cursor: "pointer" }}
-            >
-              {a.status === "CANCELLED" ? "Undo" : "Cancel"}
+            <button type="submit" className="btn-book" disabled={loading}>
+              {loading ? "Booking..." : "Book Appointment"}
             </button>
-          </div>
-        ))
-      )}
+          </form>
+        </div>
+
+        <div className="list-section">
+          <h2>Your Appointments</h2>
+          {appointments.length === 0 ? (
+            <p className="no-appointments">No appointments booked</p>
+          ) : (
+            <div className="appointments-list">
+              {appointments.map((appointment) => (
+                <div key={appointment.id} className={`appointment-item ${appointment.status?.toLowerCase()}`}>
+                  <div className="appointment-info">
+                    <h3>{appointment.patientName}</h3>
+                    <p>
+                      <strong>👨‍⚕️ Doctor:</strong> {appointment.doctorName || "Not assigned"}
+                    </p>
+                    <p>
+                      <strong>📍 Queue Number:</strong> {appointment.queue}
+                    </p>
+                    <p>
+                      <strong>📊 Status:</strong>
+                      <span className={`status-badge ${appointment.status?.toLowerCase()}`}>
+                        {appointment.status === "BOOKED" ? "✅ ACTIVE" : "❌ CANCELLED"}
+                      </span>
+                    </p>
+                  </div>
+                  {appointment.status === "BOOKED" && (
+                    <button
+                      className="btn-cancel"
+                      onClick={() => handleCancelAppointment(appointment.id)}
+                      disabled={loading}
+                    >
+                      ❌ Cancel
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,94 +1,110 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
+import "./ModernAuth.css";
 
 function UserLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
     if (!email || !password) {
-      alert("Please fill all fields");
+      setError("Please fill all fields");
       return;
     }
 
+    setLoading(true);
+    setError("");
     try {
-      const res = await api.post("/user/auth/login", {
-        email,
-        password,
-      });
-
+      const res = await api.post("/user/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", res.data.role);
-
-      alert("User login successful");
-      
       setTimeout(() => {
         window.location.href = "/";
       }, 500);
-
     } catch (err) {
-      alert(err.response?.data || "Invalid credentials");
+      setError(err.response?.data || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "400px", margin: "50px auto" }}>
-      <h2>👤 User Login</h2>
+    <div className="auth-container user-login">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-logo">👤</div>
+          <h1>Patient Portal</h1>
+          <p>Sign In to Your Account</p>
+        </div>
 
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{ width: "100%", padding: "10px", marginBottom: "10px", boxSizing: "border-box" }}
-      />
+        {error && <div className="error-message">{error}</div>}
 
-      <div style={{ position: "relative", marginBottom: "10px" }}>
-        <input
-          type={showPassword ? "text" : "password"}
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: "100%", padding: "10px", boxSizing: "border-box", paddingRight: "40px" }}
-        />
-        <button
-          onClick={() => setShowPassword(!showPassword)}
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "18px"
-          }}
-        >
-          {showPassword ? "👁️" : "👁️‍🗨️"}
-        </button>
+        <form className="auth-form" onSubmit={handleLogin}>
+          <div className="form-group">
+            <label>Email Address</label>
+            <input
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Password</label>
+            <div className="password-input">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+            {loading ? "Signing In..." : "Sign In"}
+          </button>
+        </form>
+
+        <div className="auth-divider">
+          <span>New to MediCare?</span>
+        </div>
+
+        <div className="auth-links">
+          <Link to="/user/register" className="btn btn-secondary btn-block">
+            Create Account
+          </Link>
+          <Link to="/user/forgot-password" className="forgot-link">
+            Forgot Password?
+          </Link>
+        </div>
+
+        <div className="auth-footer">
+          <p>Professional Healthcare Management</p>
+          <Link to="/admin/login" className="admin-switch">
+            Are you an administrator?
+          </Link>
+        </div>
       </div>
 
-      <button 
-        onClick={handleLogin}
-        style={{ width: "100%", padding: "10px", backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer" }}
-      >
-        User Login
-      </button>
-
-      <p style={{ textAlign: "center", marginTop: "20px" }}>
-        Don't have an account? <Link to="/user/register">Register here</Link>
-      </p>
-
-      <p style={{ textAlign: "center" }}>
-        <Link to="/user/forgot-password">Forgot Password?</Link>
-      </p>
-
-      <p style={{ textAlign: "center" }}>
-        <Link to="/admin/login">Admin Login →</Link>
-      </p>
+      <div className="auth-background"></div>
     </div>
   );
 }

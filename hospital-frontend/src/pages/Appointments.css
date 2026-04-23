@@ -1,0 +1,499 @@
+/* ===== APPOINTMENTS PAGE ===== */
+
+.appointments-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.appointments-header {
+  margin-bottom: 48px;
+  animation: slideDown 0.6s ease-out;
+}
+
+.appointments-header h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: #0066cc;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.appointments-header p {
+  font-size: 16px;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* ===== APPOINTMENTS GRID ===== */
+.appointments-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 32px;
+}
+
+/* ===== BOOKING SECTION ===== */
+.booking-section {
+  animation: slideInLeft 0.6s ease-out 0.2s both;
+}
+
+.form-card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 16px rgba(0, 102, 204, 0.12);
+  border-top: 4px solid #0066cc;
+  position: sticky;
+  top: 100px;
+}
+
+.form-header {
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.form-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0066cc;
+  margin: 0 0 8px 0;
+}
+
+.form-header p {
+  font-size: 13px;
+  color: #6c757d;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== FORM GROUPS ===== */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  color: #1a1a1a;
+}
+
+.form-group input::placeholder {
+  color: #adb5bd;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+  background: #f8f9fa;
+}
+
+/* ===== BOOK BUTTON ===== */
+.btn-book {
+  width: 100%;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+.btn-book:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 102, 204, 0.4);
+}
+
+.btn-book:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-book:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ===== APPOINTMENTS LIST SECTION ===== */
+.appointments-list-section {
+  animation: slideInRight 0.6s ease-out 0.2s both;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.list-header h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.count-badge {
+  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+}
+
+/* ===== APPOINTMENTS SCROLL ===== */
+.appointments-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 800px;
+  overflow-y: auto;
+  padding-right: 12px;
+}
+
+.appointments-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.appointments-scroll::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+.appointments-scroll::-webkit-scrollbar-thumb {
+  background: #0066cc;
+  border-radius: 3px;
+}
+
+.appointments-scroll::-webkit-scrollbar-thumb:hover {
+  background: #0052a3;
+}
+
+/* ===== APPOINTMENT ITEM ===== */
+.apt-item {
+  animation: cardSlideUp 0.6s ease-out;
+}
+
+.apt-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #0066cc;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.apt-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 102, 204, 0.12);
+  transform: translateX(4px);
+  border-left-color: #00a86b;
+}
+
+.apt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 1px solid #e9ecef;
+  gap: 12px;
+}
+
+.apt-title {
+  flex: 1;
+}
+
+.apt-title h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0066cc;
+  margin: 0 0 6px 0;
+}
+
+.apt-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0;
+}
+
+.apt-status.booked {
+  background: #e6f9f0;
+  color: #00a86b;
+}
+
+.apt-status.cancelled {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.apt-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0066cc;
+  background: rgba(0, 102, 204, 0.08);
+  padding: 6px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.apt-body {
+  padding: 16px;
+}
+
+.apt-detail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.detail-label {
+  display: block;
+  font-size: 11px;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.detail-value {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.apt-footer {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+/* ===== APPOINTMENT ACTION BUTTON ===== */
+.btn-apt-action {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-apt-action.booked {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.btn-apt-action.booked:hover {
+  background: #dc3545;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-apt-action.cancelled {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.btn-apt-action.cancelled:hover {
+  background: #28a745;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* ===== NO APPOINTMENTS STATE ===== */
+.no-appointments {
+  text-align: center;
+  padding: 80px 40px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f2f5 100%);
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-apt-icon {
+  font-size: 80px;
+  line-height: 1;
+  margin-bottom: 20px;
+  animation: float 4s ease-in-out infinite;
+}
+
+.no-appointments p {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+}
+
+.no-appointments small {
+  display: block;
+  color: #6c757d;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes cardSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .appointments-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .appointments-container {
+    padding: 24px 16px;
+  }
+
+  .appointments-header h1 {
+    font-size: 28px;
+  }
+
+  .appointments-grid {
+    gap: 24px;
+  }
+
+  .form-card {
+    padding: 24px;
+  }
+
+  .list-header h2 {
+    font-size: 20px;
+  }
+
+  .no-appointments {
+    padding: 60px 30px;
+  }
+
+  .no-apt-icon {
+    font-size: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .appointments-container {
+    padding: 16px 12px;
+  }
+
+  .appointments-header h1 {
+    font-size: 24px;
+  }
+
+  .form-card {
+    padding: 20px;
+  }
+
+  .apt-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .apt-number {
+    align-self: flex-start;
+  }
+}

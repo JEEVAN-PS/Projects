@@ -21,66 +21,68 @@ public class AppointmentService {
     @Autowired
     private DoctorRepository doctorRepository;
 
-    // ✅ GET ALL (WITH DOCTOR NAME)
+    // ✅ GET ALL APPOINTMENTS
     public List<AppointmentResponse> getAllAppointments() {
-
+        System.out.println("📋 Fetching all appointments...");
         List<Appointment> appointments = appointmentRepository.findAll();
 
-        return appointments.stream().map(appt -> {
-
-            String doctorName = "Unknown Doctor";
-            Long doctorId = null;
+        List<AppointmentResponse> response = appointments.stream().map(appt -> {
+            String doctorName = "Not assigned";
             if (appt.getDoctor() != null) {
-                doctorId = appt.getDoctor().getId();
                 doctorName = appt.getDoctor().getName();
             }
 
             return new AppointmentResponse(
                     appt.getId(),
                     appt.getPatientName(),
-                    doctorId,
                     doctorName,
                     appt.getQueue(),
                     appt.getStatus()
             );
 
         }).collect(Collectors.toList());
+        
+        System.out.println("✅ Found " + response.size() + " appointments");
+        return response;
     }
 
-    // ✅ CANCEL + QUEUE REORDER
+    // ✅ CANCEL APPOINTMENT + RESEQUENCE QUEUE
     public Appointment cancelAppointment(Long id) {
-
+        System.out.println("🗑️ Cancelling appointment ID: " + id);
+        
         Appointment appt = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
 
         Long doctorId = appt.getDoctor() != null ? appt.getDoctor().getId() : null;
         int cancelledQueue = appt.getQueue();
 
-        // mark cancelled
+        // Mark as cancelled
         appt.setStatus("CANCELLED");
         appointmentRepository.save(appt);
+        System.out.println("✅ Appointment marked as CANCELLED");
 
-        // ⭐ Get all BOOKED appointments after the cancelled one
-        List<Appointment> appointmentsAfter = appointmentRepository
-                .findByDoctor_IdAndQueueGreaterThanAndStatus(doctorId, cancelledQueue, "BOOKED");
+        // Resequence queue
+        if (doctorId != null) {
+            List<Appointment> appointmentsAfter = appointmentRepository
+                    .findByDoctor_IdAndQueueGreaterThanAndStatus(doctorId, cancelledQueue, "BOOKED");
 
-        // Decrease their queue numbers by 1
-        for (Appointment a : appointmentsAfter) {
-            a.setQueue(a.getQueue() - 1);
-            appointmentRepository.save(a);
+            System.out.println("🔄 Resequencing " + appointmentsAfter.size() + " appointments");
+            
+            for (Appointment a : appointmentsAfter) {
+                a.setQueue(a.getQueue() - 1);
+                appointmentRepository.save(a);
+            }
         }
 
         return appt;
     }
 
-    // ✅ BOOK APPOINTMENT - ⭐ WITH DEBUG LOGGING
+    // ✅ BOOK APPOINTMENT
     public Appointment bookAppointment(Appointment appointment) {
-
         System.out.println("📌 BOOKING APPOINTMENT");
         System.out.println("Patient Name: " + appointment.getPatientName());
         System.out.println("Doctor ID from request: " + (appointment.getDoctor() != null ? appointment.getDoctor().getId() : "NULL"));
 
-        // ⭐ FETCH DOCTOR FROM DATABASE
         if (appointment.getDoctor() == null || appointment.getDoctor().getId() == null) {
             System.out.println("❌ Doctor is NULL or Doctor ID is NULL");
             throw new RuntimeException("Doctor must be selected");
@@ -97,9 +99,8 @@ public class AppointmentService {
 
         System.out.println("✅ Doctor found: " + doctor.getName());
 
-        appointment.setDoctor(doctor);  // ⭐ SET THE FETCHED DOCTOR
+        appointment.setDoctor(doctor);
 
-        // Get count of BOOKED appointments only
         long count = appointmentRepository.countByDoctor_IdAndStatus(doctor.getId(), "BOOKED");
         int queue = (int) count + 1;
 
@@ -112,5 +113,63 @@ public class AppointmentService {
         System.out.println("💾 Appointment saved with ID: " + saved.getId());
 
         return saved;
+    }
+
+    // ✅ GET APPOINTMENT BY ID
+    public AppointmentResponse getAppointmentById(Long id) {
+        System.out.println("🔍 Fetching appointment ID: " + id);
+        
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+        
+        String doctorName = "Not assigned";
+        if (appointment.getDoctor() != null) {
+            doctorName = appointment.getDoctor().getName();
+        }
+        
+        return new AppointmentResponse(
+                appointment.getId(),
+                appointment.getPatientName(),
+                doctorName,
+                appointment.getQueue(),
+                appointment.getStatus()
+        );
+    }
+
+    // ✅ GET APPOINTMENTS BY DOCTOR
+    public List<AppointmentResponse> getAppointmentsByDoctor(Long doctorId) {
+        System.out.println("👨‍⚕️ Fetching appointments for doctor ID: " + doctorId);
+        
+        List<Appointment> appointments = appointmentRepository.findByDoctor_Id(doctorId);
+        
+        return appointments.stream().map(appt -> {
+            String doctorName = "Not assigned";
+            if (appt.getDoctor() != null) {
+                doctorName = appt.getDoctor().getName();
+            }
+            
+            return new AppointmentResponse(
+                    appt.getId(),
+                    appt.getPatientName(),
+                    doctorName,
+                    appt.getQueue(),
+                    appt.getStatus()
+            );
+        }).collect(Collectors.toList());
+    }
+
+    // ✅ COUNT TOTAL APPOINTMENTS
+    public long countTotalAppointments() {
+        return appointmentRepository.count();
+    }
+
+    // ✅ COUNT ACTIVE APPOINTMENTS
+    public long countActiveAppointments() {
+        return appointmentRepository.countByStatus("BOOKED");
+    }
+
+    // ✅ COUNT CANCELLED APPOINTMENTS
+    public long countCancelledAppointments() {
+        return appointmentRepository.countByStatus("CANCELLED");
     }
 }

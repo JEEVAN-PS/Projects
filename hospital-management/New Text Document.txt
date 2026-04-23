@@ -1,0 +1,83 @@
+@echo off
+REM Hospital Management System - Build and Run Script
+
+setlocal enabledelayedexpansion
+
+cd /d C:\Users\Admin\OneDrive\Desktop\Projects\hospital-management
+
+echo.
+echo ============================================
+echo Hospital Management System - Build & Run
+echo ============================================
+echo.
+
+:menu
+echo.
+echo Select an option:
+echo 1. Clean Build
+echo 2. Run Application
+echo 3. Kill Java Process
+echo 4. Build and Run
+echo 5. Exit
+echo.
+
+set /p choice="Enter choice (1-5): "
+
+if "%choice%"=="1" goto build
+if "%choice%"=="2" goto run
+if "%choice%"=="3" goto kill
+if "%choice%"=="4" goto buildandrun
+if "%choice%"=="5" goto exit
+echo Invalid choice. Try again.
+goto menu
+
+:build
+echo.
+echo Starting Maven build...
+C:\apache-maven-3.9.14\bin\mvn clean install -DskipTests
+echo.
+echo Build completed!
+pause
+goto menu
+
+:run
+echo.
+echo Starting Spring Boot Application...
+echo Press Ctrl+C to stop the application
+echo.
+C:\apache-maven-3.9.14\bin\mvn spring-boot:run
+goto menu
+
+:kill
+echo.
+echo Killing Java processes...
+taskkill /F /IM java.exe
+echo Done!
+pause
+goto menu
+
+:buildandrun
+echo.
+echo Killing existing Java processes...
+taskkill /F /IM java.exe 2>nul
+timeout /t 2
+
+echo.
+echo Starting Maven build...
+C:\apache-maven-3.9.14\bin\mvn clean install -DskipTests
+if errorlevel 1 (
+    echo.
+    echo BUILD FAILED! Check errors above.
+    pause
+    goto menu
+)
+
+echo.
+echo Build successful! Starting application...
+timeout /t 2
+echo.
+C:\apache-maven-3.9.14\bin\mvn spring-boot:run
+
+:exit
+echo Goodbye!
+endlocal

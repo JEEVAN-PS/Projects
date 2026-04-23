@@ -1,134 +1,74 @@
 import { useState } from "react";
 import api from "../services/api";
+import "./ModernAuth.css";
 
 function ChangePassword() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      alert("Please fill all fields");
+      setError("Please fill all fields");
       return;
     }
-
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match");
+      setError("New passwords do not match");
       return;
     }
-
     if (newPassword.length < 6) {
-      alert("Password must be at least 6 characters");
+      setError("Password must be 6+ characters");
       return;
     }
 
+    setLoading(true);
+    setError("");
+    setSuccess("");
     try {
-      await api.post("/auth/change-password", {
-        oldPassword,
-        newPassword
-      });
-
-      alert("Password changed successfully!");
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      await api.post("/auth/change-password", { oldPassword, newPassword });
+      setSuccess("Password changed successfully!");
+      setTimeout(() => {
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }, 2000);
     } catch (err) {
-      alert(err.response?.data || "Error changing password");
+      setError(err.response?.data || "Error changing password");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "400px", margin: "50px auto" }}>
+    <div style={{ maxWidth: "500px", margin: "2rem auto", padding: "2rem", background: "white", borderRadius: "12px" }}>
       <h2>🔐 Change Password</h2>
 
-      <div style={{ position: "relative", marginBottom: "10px" }}>
-        <input
-          type={showOldPassword ? "text" : "password"}
-          placeholder="Old Password"
-          value={oldPassword}
-          onChange={(e) => setOldPassword(e.target.value)}
-          style={{ width: "100%", padding: "10px", boxSizing: "border-box", paddingRight: "40px" }}
-        />
-        <button
-          onClick={() => setShowOldPassword(!showOldPassword)}
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "18px"
-          }}
-        >
-          {showOldPassword ? "👁️" : "👁️‍🗨️"}
+      {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">{success}</div>}
+
+      <div className="auth-form">
+        <div className="form-group">
+          <label>Old Password</label>
+          <input type="password" placeholder="Enter old password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} disabled={loading} />
+        </div>
+
+        <div className="form-group">
+          <label>New Password</label>
+          <input type="password" placeholder="Enter new password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={loading} />
+        </div>
+
+        <div className="form-group">
+          <label>Confirm Password</label>
+          <input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} disabled={loading} />
+        </div>
+
+        <button className="btn btn-primary btn-block" onClick={handleChangePassword} disabled={loading}>
+          {loading ? "Changing..." : "Change Password"}
         </button>
       </div>
-
-      <div style={{ position: "relative", marginBottom: "10px" }}>
-        <input
-          type={showNewPassword ? "text" : "password"}
-          placeholder="New Password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          style={{ width: "100%", padding: "10px", boxSizing: "border-box", paddingRight: "40px" }}
-        />
-        <button
-          onClick={() => setShowNewPassword(!showNewPassword)}
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "18px"
-          }}
-        >
-          {showNewPassword ? "👁️" : "👁️‍🗨️"}
-        </button>
-      </div>
-
-      <div style={{ position: "relative", marginBottom: "10px" }}>
-        <input
-          type={showConfirmPassword ? "text" : "password"}
-          placeholder="Confirm New Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          style={{ width: "100%", padding: "10px", boxSizing: "border-box", paddingRight: "40px" }}
-        />
-        <button
-          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          style={{
-            position: "absolute",
-            right: "10px",
-            top: "50%",
-            transform: "translateY(-50%)",
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "18px"
-          }}
-        >
-          {showConfirmPassword ? "👁️" : "👁️‍🗨️"}
-        </button>
-      </div>
-
-      <button
-        onClick={handleChangePassword}
-        style={{ width: "100%", padding: "10px", backgroundColor: "#10b981", color: "white", border: "none", cursor: "pointer", marginBottom: "10px" }}
-      >
-        Change Password
-      </button>
-
-      <p style={{ textAlign: "center", color: "#666" }}>
-        Password must be at least 6 characters long
-      </p>
     </div>
   );
 }
